@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getAllVisitsAdmin, getAllUsers, getAllOwners, updateUserRole, sendNotification, getHouses } from '../supabase/db'
+import { getAllVisitsAdmin, getAllUsers, getAllOwners, updateUserRole, sendNotification, getHouses } from '../api/db'
 import Navbar from '../components/Navbar'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { toast } from 'react-toastify'
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
     }
     setNotifySending(true)
     try {
-      await sendNotification(notifyForm.ownerId, profile.id, notifyForm.message)
+      await sendNotification(notifyForm.ownerId, notifyForm.message)
       toast.success('Notification sent!')
       setNotifyForm({ ownerId: '', message: '' })
     } catch {

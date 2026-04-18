@@ -1,50 +1,40 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '../supabase/config'
-import { getUserProfile } from '../supabase/auth'
+import { getUserProfile } from '../api/auth'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(null)   // raw JWT user payload
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  async function loadProfile(authUser) {
-    if (!authUser) {
-      setProfile(null)
-      return
+  async function loadProfile() {
+    const token = localStorage.getItem('gatepass_token')
+    if (!token) {
+      setUser(null); setProfile(null); setLoading(false); return
     }
     try {
-      const p = await getUserProfile(authUser.id)
+      const p = await getUserProfile()
+      setUser({ id: p.id, email: p.email })
       setProfile(p)
     } catch {
-      setProfile(null)
+      // Token invalid / expired
+      localStorage.removeItem('gatepass_token')
+      setUser(null); setProfile(null)
+    } finally {
+      setLoading(false)
     }
   }
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null
-      setUser(u)
-      loadProfile(u).finally(() => setLoading(false))
-    })
+  useEffect(() => { loadProfile() }, [])
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null
-      setUser(u)
-      loadProfile(u)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const value = { user, profile, loading, refreshProfile: () => loadProfile(user) }
+  const value = { user, profile, loading, refreshProfile: loadProfile }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
   return ctx
 }

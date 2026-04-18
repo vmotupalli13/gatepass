@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { signIn } from '../supabase/auth'
+import { signIn } from '../api/auth'
 import { ChevronLeft, Eye, EyeOff, Shield } from 'lucide-react'
 import { toast } from 'react-toastify'
 import LoadingSpinner from '../components/LoadingSpinner'

@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
-# ─────────────────────────────────────────────────────────────
-#  GatePass — Setup & Launch (macOS / Linux)
-#  Double-click in Finder won't work directly; see README.md
-#  To run: open Terminal, drag this file into it, press Enter
-# ─────────────────────────────────────────────────────────────
+set -e
 
-set -e  # Stop on any error
-
-BOLD="\033[1m"
-GREEN="\033[0;32m"
-RED="\033[0;31m"
-YELLOW="\033[0;33m"
-RESET="\033[0m"
+BOLD="\033[1m"; GREEN="\033[0;32m"; RED="\033[0;31m"; YELLOW="\033[0;33m"; RESET="\033[0m"
 
 echo ""
 echo -e "${BOLD}=============================================${RESET}"
@@ -19,66 +9,60 @@ echo -e "${BOLD}  GatePass — Visitor Management System      ${RESET}"
 echo -e "${BOLD}=============================================${RESET}"
 echo ""
 
-# ── 1. Check Node.js ────────────────────────────────────────
+# ── Node.js check ────────────────────────────────────────────
 if ! command -v node &>/dev/null; then
-  echo -e "${RED}[ERROR] Node.js is not installed.${RESET}"
-  echo ""
-  echo "  Install it using one of these methods:"
-  echo ""
-  echo "  Option A — Official installer (easiest):"
-  echo "    https://nodejs.org/en/download  → click LTS"
-  echo ""
-  echo "  Option B — Homebrew:"
-  echo "    brew install node"
-  echo ""
-  echo "  After installing, re-run this script."
-  echo ""
+  echo -e "${RED}[ERROR] Node.js not installed.${RESET}"
+  echo "  Install from: https://nodejs.org/en/download (choose LTS)"
   exit 1
 fi
 
-NODE_VERSION=$(node --version | sed 's/v//' | cut -d. -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-  echo -e "${RED}[ERROR] Node.js version is too old.${RESET}"
-  echo "  You have: $(node --version)"
-  echo "  Required: v18 or higher"
-  echo ""
+NODE_VER=$(node --version | sed 's/v//' | cut -d. -f1)
+if [ "$NODE_VER" -lt 18 ]; then
+  echo -e "${RED}[ERROR] Node.js $(node --version) is too old. Need v18+.${RESET}"
   echo "  Update from: https://nodejs.org/en/download"
-  echo ""
   exit 1
 fi
+echo -e "${GREEN}[OK]${RESET} Node.js $(node --version)"
 
-echo -e "${GREEN}[OK]${RESET} Node.js $(node --version) found"
-
-# ── 2. Check npm ─────────────────────────────────────────────
-if ! command -v npm &>/dev/null; then
-  echo -e "${RED}[ERROR] npm not found. Reinstall Node.js.${RESET}"
-  exit 1
-fi
-echo -e "${GREEN}[OK]${RESET} npm $(npm --version) found"
-
-# ── 3. Install dependencies ──────────────────────────────────
+# ── Install dependencies ──────────────────────────────────────
 if [ ! -d "node_modules" ]; then
-  echo ""
-  echo -e "${YELLOW}Installing dependencies — takes ~1 minute on first run...${RESET}"
-  echo "(Internet connection required)"
-  echo ""
+  echo -e "\n${YELLOW}Installing dependencies (~1 min, needs internet)...${RESET}\n"
   npm install
-  echo ""
-  echo -e "${GREEN}[OK]${RESET} Dependencies installed!"
+  echo -e "\n${GREEN}[OK]${RESET} Dependencies installed!"
 else
-  echo -e "${GREEN}[OK]${RESET} Dependencies already installed"
+  echo -e "${GREEN}[OK]${RESET} Dependencies present"
 fi
 
-# ── 4. Open browser after a short delay ──────────────────────
-(sleep 3 && open "http://localhost:5173") &
+# ── Check .env ────────────────────────────────────────────────
+if grep -q "your_mongodb_connection_string" .env 2>/dev/null; then
+  echo ""
+  echo -e "${RED}[ACTION REQUIRED] MongoDB URI not set in .env${RESET}"
+  echo ""
+  echo "  1. Go to https://mongodb.com/atlas/database → create free M0 cluster"
+  echo "  2. Get the connection string (looks like mongodb+srv://...)"
+  echo "  3. Open the .env file and replace:"
+  echo "       MONGODB_URI=your_mongodb_connection_string"
+  echo "     with your actual connection string"
+  echo ""
+  echo "  Then run: bash start.sh again"
+  echo ""
+  exit 1
+fi
 
-# ── 5. Start the dev server ──────────────────────────────────
+# ── Seed houses (once) ────────────────────────────────────────
+echo -e "\n${YELLOW}Seeding houses into database (skipped if already done)...${RESET}"
+node server/seeds/houses.js || echo "(seed skipped or already done)"
+
+# ── Open browser after delay ─────────────────────────────────
+(sleep 4 && open "http://localhost:5173") &
+
+# ── Start both servers ────────────────────────────────────────
 echo ""
 echo -e "${BOLD}Starting GatePass...${RESET}"
+echo -e "  Frontend → ${GREEN}http://localhost:5173${RESET}"
+echo -e "  Backend  → ${GREEN}http://localhost:5000${RESET}"
 echo ""
-echo -e "  App URL:  ${GREEN}http://localhost:5173${RESET}"
-echo ""
-echo "  Press Ctrl+C to stop the server."
+echo "  Press Ctrl+C to stop."
 echo ""
 
 npm run dev

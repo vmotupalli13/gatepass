@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { signOut } from '../supabase/auth'
+import { signOut } from '../api/auth'
 import { Shield, LogOut, Home } from 'lucide-react'
 import NotificationBadge from './NotificationBadge'
 import { toast } from 'react-toastify'

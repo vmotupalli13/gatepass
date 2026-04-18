@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { getVisitorById } from '../supabase/db'
+import { getVisitorById } from '../api/db'
 import QRCodeDisplay from '../components/QRCodeDisplay'
 import { CheckCircle, Home, Phone, Briefcase, QrCode } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'

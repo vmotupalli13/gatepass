@@ -1,48 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Bell } from 'lucide-react'
-import { supabase } from '../supabase/config'
+import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext'
-import { markNotificationRead } from '../supabase/db'
+import { getNotificationsForOwner, markNotificationRead } from '../api/db'
 
 export default function NotificationBadge() {
   const { profile } = useAuth()
   const [notifications, setNotifications] = useState([])
   const [open, setOpen] = useState(false)
+  const socketRef = useRef(null)
 
   useEffect(() => {
     if (!profile?.id) return
 
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `to_owner_id=eq.${profile.id}`,
-      }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev])
-      })
-      .subscribe()
+    // Initial fetch
+    getNotificationsForOwner().then(setNotifications).catch(() => {})
 
-    supabase
-      .from('notifications')
-      .select('*')
-      .eq('to_owner_id', profile.id)
-      .eq('read', false)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setNotifications(data || []))
+    // Socket.io for real-time new notifications
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000')
+    socketRef.current = socket
+    socket.emit('join:owner', profile.id)
+    socket.on('notification:new', notif => {
+      setNotifications(prev => [notif, ...prev])
+    })
 
-    return () => supabase.removeChannel(channel)
+    return () => socket.disconnect()
   }, [profile?.id])
 
   const unread = notifications.filter(n => !n.read).length
 
   async function handleOpen() {
-    setOpen(!open)
+    setOpen(o => !o)
     if (!open && unread > 0) {
-      for (const n of notifications.filter(x => !x.read)) {
-        await markNotificationRead(n.id)
-      }
+      const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
+      await Promise.all(unreadIds.map(markNotificationRead))
       setNotifications(prev => prev.map(n => ({ ...n, read: true })))
     }
   }
@@ -65,7 +56,7 @@ export default function NotificationBadge() {
             <p className="p-4 text-sm text-gray-500 text-center">No notifications</p>
           ) : (
             notifications.map(n => (
-              <div key={n.id} className="p-3 border-b border-gray-50 last:border-0">
+              <div key={n.id} className={`p-3 border-b border-gray-50 last:border-0 ${!n.read ? 'bg-blue-50/50' : ''}`}>
                 <p className="text-sm text-gray-700">{n.message}</p>
                 <p className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString()}</p>
               </div>
