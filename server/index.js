@@ -19,14 +19,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 const httpServer = http.createServer(app)
 
+// Allow any localhost origin (handles Vite using 5173, 5174, etc.)
+const localhostOrigin = /^http:\/\/localhost:\d+$/
+
 const io = new Server(httpServer, {
-  cors: { origin: process.env.VITE_ORIGIN || 'http://localhost:5173', methods: ['GET', 'POST'] }
+  cors: { origin: localhostOrigin, methods: ['GET', 'POST'] }
 })
 
-// Make io available inside route handlers via req.app.get('io')
 app.set('io', io)
 
-app.use(cors({ origin: process.env.VITE_ORIGIN || 'http://localhost:5173' }))
+app.use(cors({ origin: localhostOrigin }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
@@ -45,7 +47,7 @@ io.on('connection', socket => {
   socket.on('join:owner',    ownerId => socket.join(`owner:${ownerId}`))
 })
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5001
 
 connectDB().then(() => {
   httpServer.listen(PORT, () =>
