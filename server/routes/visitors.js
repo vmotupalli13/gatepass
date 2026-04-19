@@ -46,7 +46,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     let photo_url = null
     if (req.file) {
-      photo_url = `${process.env.SERVER_URL || 'http://localhost:5000'}/uploads/${req.file.filename}`
+      photo_url = `${process.env.SERVER_URL || 'http://localhost:5001'}/uploads/${req.file.filename}`
     }
 
     const visitor = await Visitor.create({ name, phone, purpose, house_id: houseId, photo_url })

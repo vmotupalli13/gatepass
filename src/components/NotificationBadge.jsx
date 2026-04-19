@@ -17,7 +17,7 @@ export default function NotificationBadge() {
     getNotificationsForOwner().then(setNotifications).catch(() => {})
 
     // Socket.io for real-time new notifications
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000')
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001')
     socketRef.current = socket
     socket.emit('join:owner', profile.id)
     socket.on('notification:new', notif => {

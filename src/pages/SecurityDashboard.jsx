@@ -53,7 +53,7 @@ export default function SecurityDashboard() {
     fetchVisits()
 
     // Socket.io real-time
-    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000')
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5001')
     socketRef.current = socket
     socket.emit('join:security')
 
