@@ -1,9 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { signOut } from '../api/auth'
 import { Shield, LogOut, Home } from 'lucide-react'
 import NotificationBadge from './NotificationBadge'
-import { toast } from 'react-toastify'
 
 const roleColors = {
   admin: 'bg-purple-600',
@@ -18,16 +16,12 @@ const roleLabels = {
 }
 
 export default function Navbar() {
-  const { profile } = useAuth()
+  const { profile, logout } = useAuth()
   const navigate = useNavigate()
 
-  async function handleSignOut() {
-    try {
-      await signOut()
-      navigate('/')
-    } catch {
-      toast.error('Failed to sign out')
-    }
+  function handleSignOut() {
+    logout()
+    navigate('/')
   }
 
   if (!profile) return null

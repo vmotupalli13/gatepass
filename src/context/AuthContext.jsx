@@ -28,7 +28,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { loadProfile() }, [])
 
-  const value = { user, profile, loading, refreshProfile: loadProfile }
+  function logout() {
+    localStorage.removeItem('gatepass_token')
+    setUser(null)
+    setProfile(null)
+  }
+
+  const value = { user, profile, loading, refreshProfile: loadProfile, logout }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
