@@ -21,11 +21,8 @@ router.post('/checkin', protect, requireRole('security', 'admin'), async (req, r
       .populate('security_id', 'name')
 
     const shaped = shapeVisit(populated)
-
-    // Real-time: emit to all security clients and the specific house room
     req.app.get('io').emit('visit:new', shaped)
     req.app.get('io').to(`house:${houseId}`).emit('visit:new', shaped)
-
     res.status(201).json(shaped)
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -45,31 +42,18 @@ router.patch('/:id/checkout', protect, requireRole('security', 'admin'), async (
       .populate('security_id', 'name')
 
     if (!visit) return res.status(404).json({ error: 'Visit not found' })
-
     const shaped = shapeVisit(visit)
     req.app.get('io').emit('visit:updated', shaped)
     req.app.get('io').to(`house:${visit.house_id?._id}`).emit('visit:updated', shaped)
-
     res.json(shaped)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
 })
 
-// GET /api/visits/active/:visitorId  — get active visit for a visitor
-router.get('/active/:visitorId', protect, async (req, res) => {
-  try {
-    const visit = await Visit.findOne({ visitor_id: req.params.visitorId, status: 'active' })
-      .sort({ in_time: -1 })
-      .populate('visitor_id', 'name phone photo_url purpose is_frequent')
-      .populate('house_id', 'house_number block')
-    res.json(visit ? shapeVisit(visit) : null)
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
+// ── Literal routes MUST come before parameterized routes ─────────────────────
 
-// GET /api/visits/today  — security dashboard (today's visits)
+// GET /api/visits/today  — security dashboard
 router.get('/today', protect, requireRole('security', 'admin'), async (req, res) => {
   try {
     const start = new Date(); start.setHours(0, 0, 0, 0)
@@ -91,7 +75,20 @@ router.get('/house/:houseId', protect, requireRole('owner', 'admin'), async (req
   }
 })
 
-// GET /api/visits  — admin: all visits with optional filters
+// GET /api/visits/active/:visitorId  — check if visitor is already inside
+router.get('/active/:visitorId', protect, async (req, res) => {
+  try {
+    const visit = await Visit.findOne({ visitor_id: req.params.visitorId, status: 'active' })
+      .sort({ in_time: -1 })
+      .populate('visitor_id', 'name phone photo_url purpose is_frequent')
+      .populate('house_id', 'house_number block')
+    res.json(visit ? shapeVisit(visit) : null)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /api/visits  — admin: all visits with filters
 router.get('/', protect, requireRole('admin'), async (req, res) => {
   try {
     const { from, to, houseId, shift } = req.query

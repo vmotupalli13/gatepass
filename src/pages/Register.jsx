@@ -45,7 +45,7 @@ export default function Register() {
         role: form.role,
         houseId: form.role === 'owner' ? form.houseId : null,
       })
-      toast.success('Account created! Please check your email to confirm.')
+      toast.success('Account created! You can now sign in.')
       navigate('/login')
     } catch (err) {
       toast.error(err.message || 'Registration failed')
