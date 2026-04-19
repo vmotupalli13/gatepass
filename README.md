@@ -1,73 +1,90 @@
 # GatePass — Visitor Management System
 
-Hi! The app will be running in under 5 minutes. Follow these steps:
+Full-stack gated community visitor management app.
+
+**Stack:** React + Vite + Tailwind CSS (frontend) · Node.js + Express + Socket.io (backend) · MongoDB Atlas (database) · JWT (auth)
 
 ---
 
-## Step 1 — Install Node.js (skip if already installed)
+## Quick Start
 
-Open **Terminal** (press `Cmd + Space`, type "Terminal", press Enter) and run:
+### Step 1 — Install Node.js (skip if you already have v18+)
 
+Open Terminal and check:
 ```bash
 node --version
 ```
-
-- Shows **v18 or higher** → skip to Step 2
-- Shows nothing / error → install Node.js:
-
-**Option A — Official installer (easiest):**
-Go to https://nodejs.org/en/download → click the **"LTS"** button → install → restart Terminal
-
-**Option B — Homebrew (if you already use it):**
-```bash
-brew install node
-```
+Need **v18 or higher**. Download from: https://nodejs.org/en/download → click **LTS**.
 
 ---
 
-## Step 2 — Run the app
+### Step 2 — Get a free MongoDB database (takes 3 minutes)
 
-### Option A — Using the script (recommended)
+1. Go to **https://mongodb.com** → sign up free → click **"Try Atlas Free"**
+2. Create a free **M0** cluster (pick any region, no credit card needed)
+3. When asked, create a **database user** (username + password — save these)
+4. Under **Network Access** → click **"Add IP Address"** → **"Allow access from anywhere"** → Confirm
+5. Click **Connect** → **Drivers** → copy the connection string. It looks like:
+   ```
+   mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   ```
+6. Add your database name to the URI (before the `?`):
+   ```
+   mongodb+srv://youruser:yourpassword@cluster0.xxxxx.mongodb.net/gatepass?retryWrites=true&w=majority
+   ```
 
-1. Open **Terminal**
-2. Type `cd ` (with a space after cd), then **drag the project folder** from Finder into the Terminal window and press **Enter**
-3. Run:
+---
+
+### Step 3 — Configure the .env file
+
+Open the `.env` file in this folder and replace the MongoDB line:
+```
+MONGODB_URI=paste_your_connection_string_here
+```
+Leave everything else as-is.
+
+---
+
+### Step 4 — Run the app
+
 ```bash
 bash start.sh
 ```
 
-The script will install packages on first run (~1 minute) and then open the app automatically at **http://localhost:5173**
+This will:
+- Install all packages on first run (~1 minute)
+- Seed 12 houses into the database automatically
+- Start the backend on **http://localhost:5000**
+- Start the frontend on **http://localhost:5173** (opens in browser)
 
 ---
 
-### Option B — Manual (same result)
+## Manual start (same result)
 
 ```bash
-# In Terminal, inside the project folder:
 npm install
-npm run dev
+npm run seed     # run once to add houses to DB
+npm run dev      # starts both frontend + backend together
 ```
-
-Then open your browser at: **http://localhost:5173**
 
 ---
 
-## Pages & roles
+## Pages & Roles
 
 | URL | Who uses it |
 |-----|-------------|
-| `/` | Landing page — start here |
-| `/visitor-form` | Visitors (no login needed) |
-| `/visitor-qr` | QR code shown to visitor |
+| `/` | Landing page |
+| `/visitor-form` | Visitors — no login needed |
+| `/visitor-qr` | QR code entry pass |
 | `/register` | Create admin / owner / security account |
 | `/login` | Sign in |
-| `/security` | Security guard dashboard |
+| `/security` | Security guard dashboard (live QR scan) |
 | `/owner` | House owner dashboard |
-| `/admin` | Admin full access |
+| `/admin` | Admin — full access |
 
 ---
 
-## Stopping the server
+## Stopping the app
 
 Press **Ctrl + C** in the Terminal window.
 
@@ -81,8 +98,6 @@ Press **Ctrl + C** in the Terminal window.
 | npm | 9 or higher |
 | Browser | Chrome / Safari / Firefox (latest) |
 
-The database is already connected in the cloud — no extra setup needed.
-
 ---
 
 ## Troubleshooting
@@ -92,19 +107,14 @@ The database is already connected in the cloud — no extra setup needed.
 npm install --legacy-peer-deps
 ```
 
-**Port 5173 already in use**
+**Port already in use**
 ```bash
 npm run dev -- --port 3000
 ```
-Open http://localhost:3000
 
-**"permission denied: start.sh"**
-```bash
-chmod +x start.sh && bash start.sh
-```
-
-**Blank white screen**
-Open browser DevTools (`Cmd + Option + J`) → Console tab → read the error
+**"Cannot connect to MongoDB"**
+- Check your `MONGODB_URI` in `.env` — make sure username/password are correct
+- Make sure you allowed access from anywhere in MongoDB Atlas Network Access
 
 **Camera not working on QR scanner**
-Must be running on `localhost` — browsers block camera for plain http on remote URLs
+- Must run on `localhost` or `https://` — browsers block camera on plain http remote URLs
