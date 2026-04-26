@@ -44,6 +44,13 @@ app.use('/api/users',         userRoutes)
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
 
+// Serve React frontend in production
+const distPath = path.join(__dirname, '../dist')
+app.use(express.static(distPath))
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'))
+})
+
 io.on('connection', socket => {
   socket.on('join:security', () => socket.join('security'))
   socket.on('join:house',    houseId => socket.join(`house:${houseId}`))

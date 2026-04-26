@@ -12,6 +12,7 @@
     "dev:frontend": "vite",
     "dev:backend": "nodemon server/index.js",
     "build": "vite build",
+    "start": "node server/index.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "node server/seeds/houses.js"
